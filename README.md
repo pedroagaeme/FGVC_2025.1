@@ -1,44 +1,37 @@
-Construção de Pappus na Topologia Circular do Plano Projetivo
-Este projeto demonstra a construção geométrica do teorema de Pappus dentro da topologia circular do plano projetivo, usando OpenGL e GLUT em C++ para visualização interativa.
+# Construção de Pappus na Topologia Circular do Plano Projetivo
 
-🚀 Pré-requisitos
-Certifique-se de que seu sistema Linux possui as bibliotecas necessárias:
+Projeto que demonstra a construção geométrica do teorema de Pappus na topologia circular do plano projetivo, usando OpenGL e GLUT para visualização interativa em C++.
 
+## Pré-requisitos
+
+- Sistema Linux (Ubuntu/Debian recomendado)
+- Pacotes necessários:
+
+```bash
 sudo apt update
-sudo apt-get install freeglut3-dev
+sudo apt install build-essential freeglut3 freeglut3-dev libglu1-mesa-dev mesa-common-dev
+```
 
-📂 Estrutura do Projeto
-project/
-│── include/
-│ ├── Vector3.h
-│ ├── Matrix3.h
-│ ├── utils.h
-│ └── graphics.h
-│
-│── src/
-│ ├── Vector3.cpp
-│ ├── Matrix3.cpp
-│ ├── utils.cpp
-│ ├── graphics.cpp
-│ └── main.cpp
-│
-│── README.md
+## Compilação
 
-⚙️ Compilação
-Navegue até a pasta principal do projeto e execute:
+No diretório do projeto, execute:
 
+```bash
 g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut
+```
 
-▶️ Execução
-Após a compilação, execute:
+## Execução
 
+Após compilar, rode:
+
+```bash
 ./app
+```
 
-Isso abrirá uma janela chamada Circle Drawing onde você poderá interagir com os círculos usando o mouse.
+Uma janela abrirá para visualização e interação com a construção geométrica.
 
-🖱️ Controles
-Clique Esquerdo: Marca um novo ponto no primeiro círculo (até 3 pontos).
+## Controles
 
-Movimento do Mouse: Move o ponto atual antes de confirmar com clique.
-
-Linhas: Após selecionar dois pontos, uma linha projetada aparece no círculo
+- Clique esquerdo: marca pontos no círculo principal.  
+- Movimento do mouse: move o ponto atual antes da confirmação.  
+- A visualização inclui linhas projetadas ilustrando o teorema de Pappus.
