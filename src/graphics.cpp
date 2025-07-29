@@ -32,7 +32,7 @@ void passiveMouseMotion(int x, int y) {
     glutPostRedisplay();
 }
 
-std::tuple<long double, bool> calculateRotationZ(std::tuple<Vector3, Vector3> line) {
+std::tuple<long double, bool, long double> calculateRotations(std::tuple<Vector3, Vector3> line) {
     auto [p1, p2] = line;
     Vector3 lineVector = p1.cross(p2);
 
@@ -44,7 +44,9 @@ std::tuple<long double, bool> calculateRotationZ(std::tuple<Vector3, Vector3> li
     long double zRotationAngle = infinityPoint.dot(Vector3(1, 0, 0));
     bool clockwise = (infinityPoint[1] < 0);
 
-    return std::make_tuple(zRotationAngle, clockwise);
+    long double xRotationAngle = (lineVector.cross(infinityPoint).normalize())[2];
+
+    return std::make_tuple(zRotationAngle, clockwise, xRotationAngle);
 }
 
 // ---- Display ----
@@ -88,16 +90,15 @@ void display(void) {
             points[j] = Vector3(dx, dy, dz);
         }
 
-        auto [zRotationAngle, clockwise] = calculateRotationZ({points[0], points[1]});
+        auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({points[0], points[1]});
 
-        long double xRotationAngle = 1;
 
         for(float i = 0; i < M_PI; i += 0.001) {
             localCoordPoint = Vector3(cos(i), sin(i), 0);
             globalCoordPoint =
-                Matrix3::rotationZ(zRotationAngle, clockwise) *
-                Matrix3::rotationX(xRotationAngle) *
-                localCoordPoint;
+                Matrix3::rotationZCos(zRotationAngle, clockwise) *
+                (Matrix3::rotationXSin(xRotationAngle) *
+                localCoordPoint);
 
             x = (circleRadius * globalCoordPoint[0]) + offsetCircle1X;
             y = (circleRadius * globalCoordPoint[1]) + offsetCircle1Y;

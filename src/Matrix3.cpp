@@ -10,9 +10,9 @@ Matrix3::Matrix3() {
             data[i][j]=0;
 }
 
-Matrix3::Matrix3(double d00, double d01, double d02,
-                 double d10, double d11, double d12,
-                 double d20, double d21, double d22) {
+Matrix3::Matrix3(long double d00, long double d01, long double d02,
+                 long double d10, long double d11, long double d12,
+                 long double d20, long double d21, long double d22) {
     data[0][0]=d00; data[0][1]=d01; data[0][2]=d02;
     data[1][0]=d10; data[1][1]=d11; data[1][2]=d12;
     data[2][0]=d20; data[2][1]=d21; data[2][2]=d22;
@@ -113,17 +113,22 @@ Matrix3 Matrix3::identity() {
     return Matrix3(1,0,0,0,1,0,0,0,1);
 }
 
-Matrix3 Matrix3::rotationX(long double c) {
+Matrix3 Matrix3::rotationXCos(long double c) {
     long double s=sqrt(1-pow(c,2));
     return Matrix3(1,0,0,0,c,-s,0,s,c);
 }
 
-Matrix3 Matrix3::rotationY(long double c) {
+Matrix3 Matrix3::rotationXSin(long double s) {
+    long double c = sqrt(1-pow(s,2));
+    return Matrix3(1,0,0,0,c,-s,0,s,c);
+}
+
+Matrix3 Matrix3::rotationYCos(long double c) {
     long double s=sqrt(1-pow(c,2));
     return Matrix3(c,0,s,0,1,0,-s,0,c);
 }
 
-Matrix3 Matrix3::rotationZ(long double c,bool clockwise) {
+Matrix3 Matrix3::rotationZCos(long double c,bool clockwise) {
     long double s=sqrt(1-pow(c,2));
     if(clockwise) s*=-1;
     return Matrix3(c,-s,0,s,c,0,0,0,1);

@@ -8,9 +8,9 @@ public:
     long double data[3][3];
 
     Matrix3();
-    Matrix3(double d00, double d01, double d02,
-            double d10, double d11, double d12,
-            double d20, double d21, double d22);
+    Matrix3(long double d00, long double d01, long double d02,
+            long double d10, long double d11, long double d12,
+            long double d20, long double d21, long double d22);
 
     long double* operator[](int row);
     const long double* operator[](int row) const;
@@ -31,9 +31,10 @@ public:
     double determinant() const;
 
     static Matrix3 identity();
-    static Matrix3 rotationX(long double c);
-    static Matrix3 rotationY(long double c);
-    static Matrix3 rotationZ(long double c, bool clockwise);
+    static Matrix3 rotationXCos(long double c);
+    static Matrix3 rotationXSin(long double s);
+    static Matrix3 rotationYCos(long double c);
+    static Matrix3 rotationZCos(long double c, bool clockwise);
 
     void print() const;
 };
