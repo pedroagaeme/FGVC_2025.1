@@ -1,5 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
+#include "Matrix3.h"
 
 #include <GL/glut.h>
 #include <tuple>
@@ -13,15 +14,18 @@ const int WORLD_TOP = 420;
 
 extern int collectedPoints;
 extern int drawablePoints;
-extern std::tuple<float, float> markedPoints[6];
+extern std::tuple<double, double, int ,int> markedPoints[6];
 extern int offsetCircle1X, offsetCircle1Y;
 extern int offsetCircle2X, offsetCircle2Y;
 extern int circleRadius;
 extern int worldX, worldY;
+extern Matrix3 lineTransformations[2];
+extern std::tuple<long double, bool> lineBaseRotations[2];
 
 void myInit(void);
 void mouseToWorldCoords(int mouseX, int mouseY, int& worldX, int& worldY);
 double calcNorm2d(double distanceX, double distanceY);
 void capDistance2D(double& distanceX, double& distanceY);
+void setMaxDistance2D(double& distanceX, double& distanceY);
 
 #endif

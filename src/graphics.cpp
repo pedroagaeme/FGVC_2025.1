@@ -17,19 +17,41 @@ void mouseClickCallback(int button, int state, int mouseX, int mouseY) {
 void passiveMouseMotion(int x, int y) {
     if(collectedPoints < 6) {
         mouseToWorldCoords(x, y, worldX, worldY);
-        if(collectedPoints < 3) {
-            double distanceX = worldX - offsetCircle1X;
-            double distanceY = worldY - offsetCircle1Y;
+        double distanceX = worldX - offsetCircle1X;
+        double distanceY = worldY - offsetCircle1Y;
+        if(collectedPoints < 2) {
             capDistance2D(distanceX, distanceY);
+            markedPoints[collectedPoints] = std::make_tuple(
+                distanceX,
+                distanceY,
+                offsetCircle1X,
+                offsetCircle1Y
+            );
+        }
+        else if(collectedPoints == 2) {
+            auto [zRotationAngle, direction] = lineBaseRotations[0];
+            Vector3 lineLocalDistances = Matrix3::rotationZCos(zRotationAngle, !direction) * Vector3(distanceX, distanceY, 0);
+            distanceX = lineLocalDistances[0];
+            distanceY = lineLocalDistances[1];
+            if(distanceX > circleRadius) {
+                distanceX = circleRadius;
+            }
+            else if(distanceX < -circleRadius) {
+                distanceX = -circleRadius;
+            }
+            distanceY = sqrt(pow(circleRadius, 2) - pow(distanceX, 2));
+            Vector3 pointInLine = lineTransformations[0] * Vector3(distanceX, distanceY, 0);
 
             markedPoints[collectedPoints] = std::make_tuple(
-                offsetCircle1X + distanceX,
-                offsetCircle1Y + distanceY
+                pointInLine[0],
+                pointInLine[1],
+                offsetCircle1X,
+                offsetCircle1Y
             );
-            drawablePoints = collectedPoints + 1;
         }
+        drawablePoints = collectedPoints + 1;
+        glutPostRedisplay();
     }
-    glutPostRedisplay();
 }
 
 std::tuple<long double, bool, long double> calculateRotations(std::tuple<Vector3, Vector3> line) {
@@ -67,38 +89,43 @@ void display(void) {
     }
 
     // draw marked points
-    glColor3f(1, 1, 1);
+    glColor3f(0.5, 0.5, 0.5);
     for(int j = 0; j < drawablePoints; j++) {
-        auto[px, py] = markedPoints[j];
+        auto[px, py, offsetCircleX, offsetCircleY] = markedPoints[j];
+        if((pow(circleRadius, 2) - pow(px, 2) - pow(py, 2)) < 0.5) {
+            for(float i = 0; i < 2 * M_PI; i += 0.001) {
+                int pxCircle = (5 * cos(i)) - px + offsetCircleX;
+                int pyCircle = (5 * sin(i)) - py + offsetCircleY;
+            glVertex2i(pxCircle, pyCircle);
+        }
+        }
         for(float i = 0; i < 2 * M_PI; i += 0.001) {
-            int pxCircle = (10 * cos(i)) + px;
-            int pyCircle = (10 * sin(i)) + py;
+            int pxCircle = (5 * cos(i)) + px + offsetCircleX;
+            int pyCircle = (5 * sin(i)) + py + offsetCircleY;
             glVertex2i(pxCircle, pyCircle);
         }
     }
 
     // draw line 1 projected onto first circle
     if(collectedPoints >= 2) {
-        glColor3f(0.0, 1.0, 1.0);
+        glColor3f(1.0, 1.0, 1.0);
 
         Vector3 points[2];
         for(int j = 0; j < 2; j++) {
-            auto [xCoord, yCoord] = markedPoints[j];
-            double dx = (xCoord - offsetCircle1X);
-            double dy = (yCoord - offsetCircle1Y);
+            auto [xCoord, yCoord, offsetCircleX, offsetCircleY] = markedPoints[j];
+            double dx = (xCoord);
+            double dy = (yCoord);
             float dz = sqrt(pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2));
             points[j] = Vector3(dx, dy, dz);
         }
 
         auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({points[0], points[1]});
-
+        lineTransformations[0] = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+        lineBaseRotations[0] = std::make_tuple(zRotationAngle, clockwise);
 
         for(float i = 0; i < M_PI; i += 0.001) {
             localCoordPoint = Vector3(cos(i), sin(i), 0);
-            globalCoordPoint =
-                Matrix3::rotationZCos(zRotationAngle, clockwise) *
-                (Matrix3::rotationXSin(xRotationAngle) *
-                localCoordPoint);
+            globalCoordPoint = lineTransformations[0] * localCoordPoint;
 
             x = (circleRadius * globalCoordPoint[0]) + offsetCircle1X;
             y = (circleRadius * globalCoordPoint[1]) + offsetCircle1Y;
