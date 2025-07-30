@@ -5,6 +5,7 @@
 #include "Vector3.h"
 #include "Matrix3.h"
 
+
 void mouseClickCallback(int button, int state, int mouseX, int mouseY) {
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         if(collectedPoints < 3) {
@@ -57,7 +58,6 @@ void passiveMouseMotion(int x, int y) {
 std::tuple<long double, bool, long double> calculateRotations(std::tuple<Vector3, Vector3> line) {
     auto [p1, p2] = line;
     Vector3 lineVector = p1.cross(p2);
-
     if(lineVector[2] < 0)
         lineVector = lineVector * -1;
 
@@ -115,7 +115,11 @@ void display(void) {
             auto [xCoord, yCoord, offsetCircleX, offsetCircleY] = markedPoints[j];
             double dx = (xCoord);
             double dy = (yCoord);
-            float dz = sqrt(pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2));
+            double norm = pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2);
+            long double dz = 0;
+            if(norm > 0.5) {
+                dz = sqrt(norm);
+            }
             points[j] = Vector3(dx, dy, dz);
         }
 
