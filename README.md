@@ -4,12 +4,12 @@ Projeto que demonstra a construção geométrica do teorema de Pappus na topolog
 
 ## Pré-requisitos
 
-- Sistema Linux (Ubuntu/Debian recomendado)
-- Pacotes necessários:
+Para Linux (Ubuntu/Debian recomendado):
+- Comandos necessários:
 
 ```bash
 sudo apt update
-sudo apt install build-essential freeglut3 freeglut3-dev libglu1-mesa-dev mesa-common-dev
+sudo apt install freeglut3-dev 
 ```
 
 ## Compilação
@@ -17,7 +17,7 @@ sudo apt install build-essential freeglut3 freeglut3-dev libglu1-mesa-dev mesa-c
 No diretório do projeto, execute:
 
 ```bash
-g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut
+g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut -lGLEW
 ```
 
 ## Execução
