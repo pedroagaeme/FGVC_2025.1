@@ -17,7 +17,7 @@ sudo apt install freeglut3-dev
 No diretório do projeto, execute:
 
 ```bash
-g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut -lGLEW
+g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut
 ```
 
 ## Execução
