@@ -20,7 +20,7 @@ extern int offsetCircle2X, offsetCircle2Y;
 extern int circleRadius;
 extern int worldX, worldY;
 extern Matrix3 lineTransformations[2];
-extern std::tuple<long double, bool> lineBaseRotations[2];
+extern std::tuple<double, bool> lineBaseRotations[2];
 
 void myInit(void);
 void mouseToWorldCoords(int mouseX, int mouseY, int& worldX, int& worldY);

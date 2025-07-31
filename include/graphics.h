@@ -16,7 +16,7 @@ void passiveMouseMotion(int x, int y);
 // Função principal de desenho
 void display(void);
 
-// Cálculo da rotação em Z
-std::tuple<long double, bool> calculateRotationZ(std::tuple<Vector3, Vector3> line);
+// Cálculo da rotação em Z, sua direção e X
+std::tuple<double, bool, double> calculateRotations(std::tuple<Vector3, Vector3> line);
 
 #endif // GRAPHICS_H

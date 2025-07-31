@@ -11,7 +11,7 @@ int offsetCircle2Y = 0;
 int circleRadius = 200;
 int worldX, worldY;
 Matrix3 lineTransformations[2] = {};
-std::tuple<long double, bool> lineBaseRotations[2];
+std::tuple<double, bool> lineBaseRotations[2];
 
 
 void myInit(void) {

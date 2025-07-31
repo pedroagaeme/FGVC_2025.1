@@ -82,7 +82,7 @@ void passiveMouseMotion(int x, int y) {
 }
 
 
-std::tuple<long double, bool, long double> calculateRotations(std::tuple<Vector3, Vector3> line) {
+std::tuple<double, bool, double> calculateRotations(std::tuple<Vector3, Vector3> line) {
     auto [p1, p2] = line;
     Vector3 lineVector = p1.cross(p2);
     if(lineVector[2] < 0)
@@ -90,10 +90,10 @@ std::tuple<long double, bool, long double> calculateRotations(std::tuple<Vector3
 
     Vector3 infinityPoint = Vector3(-lineVector[1], lineVector[0], 0).normalize();
 
-    long double zRotationAngle = infinityPoint.dot(Vector3(1, 0, 0));
+    double zRotationAngle = infinityPoint.dot(Vector3(1, 0, 0));
     bool clockwise = (infinityPoint[1] < 0);
 
-    long double xRotationAngle = (lineVector.cross(infinityPoint).normalize())[2];
+    double xRotationAngle = (lineVector.cross(infinityPoint).normalize())[2];
 
     return std::make_tuple(zRotationAngle, clockwise, xRotationAngle);
 }
@@ -143,7 +143,7 @@ void display(void) {
             double dx = (xCoord);
             double dy = (yCoord);
             double norm = pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2);
-            long double dz = 0;
+            double dz = 0;
             if(norm > 0.5) {
                 dz = sqrt(norm);
             }
@@ -182,7 +182,7 @@ void display(void) {
             double dx = (xCoord);
             double dy = (yCoord);
             double norm = pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2);
-            long double dz = 0;
+            double dz = 0;
             if(norm > 0.5) {
                 dz = sqrt(norm);
             }
