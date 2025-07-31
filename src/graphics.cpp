@@ -85,8 +85,14 @@ void passiveMouseMotion(int x, int y) {
 std::tuple<double, bool, double> calculateRotations(std::tuple<Vector3, Vector3> line) {
     auto [p1, p2] = line;
     Vector3 lineVector = p1.cross(p2);
-    if(lineVector[2] < 0)
+
+    if(lineVector[0] == 0 && lineVector[1] == 0) {
+        return std::make_tuple(1, false, 0);
+    }
+
+    if(lineVector[2] < 0) {
         lineVector = lineVector * -1;
+    }
 
     Vector3 infinityPoint = Vector3(-lineVector[1], lineVector[0], 0).normalize();
 
@@ -103,7 +109,7 @@ void display(void) {
     glClear(GL_COLOR_BUFFER_BIT);
     glBegin(GL_POINTS);
 
-    float x, y;
+    float x, y, vx, vy;
     Vector3 localCoordPoint;
     Vector3 globalCoordPoint;
 
@@ -119,7 +125,7 @@ void display(void) {
     glColor3f(0.5, 0.5, 0.5);
     for(int j = 0; j < drawablePoints; j++) {
         auto[px, py, offsetCircleX, offsetCircleY] = markedPoints[j];
-        if((pow(circleRadius, 2) - pow(px, 2) - pow(py, 2)) < 0.5) {
+        if(checkInfinityPoint(px, py)) {
             for(float i = 0; i < 2 * M_PI; i += 0.001) {
                 int pxCircle = (7 * cos(i)) - px + offsetCircleX;
                 int pyCircle = (7 * sin(i)) - py + offsetCircleY;
@@ -143,9 +149,9 @@ void display(void) {
             double dx = (xCoord);
             double dy = (yCoord);
             double norm = pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2);
-            double dz = 0;
-            if(norm > 0.5) {
-                dz = sqrt(norm);
+            double dz = sqrt(norm);
+            if(std::isnan(dz)) {
+                dz = 0;
             }
             points[j] = Vector3(dx, dy, dz);
         }
@@ -158,9 +164,17 @@ void display(void) {
             localCoordPoint = Vector3(cos(i), sin(i), 0);
             globalCoordPoint = lineTransformations[0] * localCoordPoint;
 
-            x = (circleRadius * globalCoordPoint[0]) + offsetCircle1X;
-            y = (circleRadius * globalCoordPoint[1]) + offsetCircle1Y;
+            vx = (circleRadius * globalCoordPoint[0]);
+            vy = (circleRadius * globalCoordPoint[1]);
+            x = vx + offsetCircle1X;
+            y = vy + offsetCircle1Y;
             glVertex2i(x, y);
+
+            if(checkInfinityPoint(vx, vy))  {
+                x = -vx + offsetCircle1X;
+                y = -vy + offsetCircle1Y;
+                glVertex2i(x, y);
+            }
         }
     }
 
@@ -182,9 +196,9 @@ void display(void) {
             double dx = (xCoord);
             double dy = (yCoord);
             double norm = pow(circleRadius, 2) - pow(dx, 2) - pow(dy, 2);
-            double dz = 0;
-            if(norm > 0.5) {
-                dz = sqrt(norm);
+            double dz = sqrt(norm);
+            if(std::isnan(dz)) {
+                dz = 0;
             }
             points[j - 3] = Vector3(dx, dy, dz);
         }
@@ -198,9 +212,17 @@ void display(void) {
             localCoordPoint = Vector3(cos(i), sin(i), 0);
             globalCoordPoint = lineTransformations[1] * localCoordPoint;
 
-            x = (circleRadius * globalCoordPoint[0]) + offsetCircle2X;
-            y = (circleRadius * globalCoordPoint[1]) + offsetCircle2Y;
+            vx = (circleRadius * globalCoordPoint[0]);
+            vy = (circleRadius * globalCoordPoint[1]);
+            x = vx + offsetCircle2X;
+            y = vy + offsetCircle2Y;
             glVertex2i(x, y);
+
+            if(checkInfinityPoint(vx, vy)) {
+                x = -vx + offsetCircle2X;
+                y = -vy + offsetCircle2Y;
+                glVertex2i(x, y);
+            }
         }
     }
 

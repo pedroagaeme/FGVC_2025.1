@@ -10,6 +10,7 @@ int offsetCircle2X = 300;
 int offsetCircle2Y = 0;
 int circleRadius = 200;
 int worldX, worldY;
+double infinityThreshold = 0.05;
 Matrix3 lineTransformations[2] = {};
 std::tuple<double, bool> lineBaseRotations[2];
 
@@ -43,4 +44,8 @@ void setMaxDistance2D(double& distanceX,double& distanceY) {
     double norm=calcNorm2d(distanceX,distanceY);
     distanceX*=circleRadius/norm;
     distanceY*=circleRadius/norm;
+}
+
+bool checkInfinityPoint(double px, double py) {
+    return ((pow(circleRadius, 2) - pow(px, 2) - pow(py, 2)) < infinityThreshold);
 }
