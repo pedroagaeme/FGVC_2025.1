@@ -20,6 +20,7 @@ extern int offsetCircle2X, offsetCircle2Y;
 extern int circleRadius;
 extern int worldX, worldY;
 extern double infinityThreshold;
+extern float c;
 extern Matrix3 lineTransformations[2];
 extern std::tuple<double, bool> lineBaseRotations[2];
 
@@ -29,5 +30,6 @@ double calcNorm2d(double distanceX, double distanceY);
 void capDistance2D(double& distanceX, double& distanceY);
 void setMaxDistance2D(double& distanceX, double& distanceY);
 bool checkInfinityPoint(double px, double dy);
+bool checkLinePointsDifferent(const Vector3& point1, const Vector3& point2);
 
 #endif

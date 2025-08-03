@@ -8,8 +8,37 @@
 
 void mouseClickCallback(int button, int state, int mouseX, int mouseY) {
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        if(collectedPoints < 6) {
-            collectedPoints++;
+        if(collectedPoints < 3) {
+            bool allPointsDifferent = true;
+            for(int i = 0; i <= collectedPoints; i++) {
+                auto [px, py, offsetPX, offsetPY] = markedPoints[i];
+                for(int j = i + 1; j <= collectedPoints; j++) {
+                    auto [qx, qy, offsetQX, offsetQY] = markedPoints[j];
+                    if(!checkLinePointsDifferent(Vector3(px, py, 0), Vector3(qx, qy, 0))) {
+                        allPointsDifferent = false;
+                        break;
+                    }
+                }
+            }
+            if(allPointsDifferent) {
+                collectedPoints++;
+            }
+        }
+        else if(collectedPoints < 6) {
+            bool allPointsDifferent = true;
+            for(int i = 3; i <= collectedPoints; i++) {
+                auto [px, py, offsetPX, offsetPY] = markedPoints[i];
+                for(int j = i + 1; j <= collectedPoints; j++) {
+                    auto [qx, qy, offsetQX, offsetQY] = markedPoints[j];
+                    if(!checkLinePointsDifferent(Vector3(px, py, 0), Vector3(qx, qy, 0))) {
+                        allPointsDifferent = false;
+                        break;
+                    }
+                }
+            }
+            if(allPointsDifferent) {
+                collectedPoints++;
+            }
         }
         glutPostRedisplay();
     }
@@ -60,11 +89,8 @@ void passiveMouseMotion(int x, int y) {
             Vector3 lineLocalDistances = Matrix3::rotationZCos(zRotationAngle, !direction) * Vector3(distanceX, distanceY, 0);
             distanceX = lineLocalDistances[0];
             distanceY = lineLocalDistances[1];
-            if(distanceX > circleRadius) {
+            if(abs(distanceX) > circleRadius) {
                 distanceX = circleRadius;
-            }
-            else if(distanceX < -circleRadius) {
-                distanceX = -circleRadius;
             }
             distanceY = sqrt(pow(circleRadius, 2) - pow(distanceX, 2));
             Vector3 pointInLine = lineTransformations[lineNumber] * Vector3(distanceX, distanceY, 0);
