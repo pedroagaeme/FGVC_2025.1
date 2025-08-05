@@ -5,6 +5,19 @@
 #include "Vector3.h"
 #include "Matrix3.h"
 
+Vector3 putPointInRealLine(double distanceX, double distanceY, int offsetX, int offsetY, int lineNumber) {
+    distanceX -= offsetX;
+    distanceY -= offsetY;
+    auto [zRotationAngle, direction] = lineBaseRotations[lineNumber];
+    Vector3 lineLocalDistances = Matrix3::rotationZCos(zRotationAngle, !direction) * Vector3(distanceX, distanceY, 0);
+    distanceX = lineLocalDistances[0];
+    distanceY = lineLocalDistances[1];
+    if(abs(distanceX) > circleRadius) {
+        distanceX = circleRadius;
+    }
+    distanceY = sqrt(pow(circleRadius, 2) - pow(distanceX, 2));
+    return lineTransformations[lineNumber] * Vector3(distanceX, distanceY, 0);
+}
 
 void mouseClickCallback(int button, int state, int mouseX, int mouseY) {
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
@@ -73,6 +86,7 @@ void passiveMouseMotion(int x, int y) {
         }
         else {
             int lineNumber = (collectedPoints + 1) / 3 - 1;
+            Vector3 pointInLine;
             int offsetX, offsetY;
             offsetX = offsetY = 0;
             if(lineNumber == 0) {
@@ -83,18 +97,15 @@ void passiveMouseMotion(int x, int y) {
                 offsetX = offsetCircle2X;
                 offsetY = offsetCircle2Y;
             }
-            distanceX -= offsetX;
-            distanceY -= offsetY;
-            auto [zRotationAngle, direction] = lineBaseRotations[lineNumber];
-            Vector3 lineLocalDistances = Matrix3::rotationZCos(zRotationAngle, !direction) * Vector3(distanceX, distanceY, 0);
-            distanceX = lineLocalDistances[0];
-            distanceY = lineLocalDistances[1];
-            if(abs(distanceX) > circleRadius) {
-                distanceX = circleRadius;
+            if(isIdealLine[lineNumber]) {
+                distanceX = (distanceX - offsetX) * circleRadius;
+                distanceY = (distanceY - offsetY) * circleRadius;
+                capDistance2D(distanceX, distanceY);
+                pointInLine = Vector3(distanceX, distanceY, 0);
             }
-            distanceY = sqrt(pow(circleRadius, 2) - pow(distanceX, 2));
-            Vector3 pointInLine = lineTransformations[lineNumber] * Vector3(distanceX, distanceY, 0);
-
+            else {
+                pointInLine = putPointInRealLine(distanceX, distanceY, offsetX, offsetY, lineNumber);
+            }
             markedPoints[collectedPoints] = std::make_tuple(
                 pointInLine[0],
                 pointInLine[1],
@@ -103,6 +114,24 @@ void passiveMouseMotion(int x, int y) {
             );
         }
         drawablePoints = collectedPoints + 1;
+        glutPostRedisplay();
+    }
+    else {
+        mouseToWorldCoords(x, y, worldX, worldY);
+        double distanceX = worldX;
+        double distanceY = worldY;
+        Vector3 pointInLine;
+        if(isIdealLine[0]) {
+            distanceX = (distanceX - offsetCircle1X) * circleRadius;
+            distanceY = (distanceY - offsetCircle1Y) * circleRadius;
+            capDistance2D(distanceX, distanceY);
+            pointInLine = Vector3(distanceX, distanceY, 0);
+        }
+        else {
+            pointInLine = putPointInRealLine(distanceX, distanceY, offsetCircle1X, offsetCircle1Y, 0);
+        }
+        interactivePoint = std::make_tuple(pointInLine[0], pointInLine[1]);
+        canDrawInteractivePoint = true;
         glutPostRedisplay();
     }
 }
@@ -147,29 +176,12 @@ void display(void) {
         glVertex2i(x, y);
     }
 
-    // draw marked points
-    glColor3f(0.5, 0.5, 0.5);
-    for(int j = 0; j < drawablePoints; j++) {
-        auto[px, py, offsetCircleX, offsetCircleY] = markedPoints[j];
-        if(checkInfinityPoint(px, py)) {
-            for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                int pxCircle = (7 * cos(i)) - px + offsetCircleX;
-                int pyCircle = (7 * sin(i)) - py + offsetCircleY;
-            glVertex2i(pxCircle, pyCircle);
-        }
-        }
-        for(float i = 0; i < 2 * M_PI; i += 0.001) {
-            int pxCircle = (7 * cos(i)) + px + offsetCircleX;
-            int pyCircle = (7 * sin(i)) + py + offsetCircleY;
-            glVertex2i(pxCircle, pyCircle);
-        }
-    }
-
     // draw line 1 projected onto first circle
     if(collectedPoints >= 2) {
         glColor3f(1.0, 1.0, 1.0);
 
         Vector3 points[2];
+        int infinityPointCount = 0;
         for(int j = 0; j < 2; j++) {
             auto [xCoord, yCoord, offsetCircleX, offsetCircleY] = markedPoints[j];
             double dx = (xCoord);
@@ -179,7 +191,16 @@ void display(void) {
             if(std::isnan(dz)) {
                 dz = 0;
             }
+            if(norm <= infinityThreshold) {
+                infinityPointCount++;
+            }
             points[j] = Vector3(dx, dy, dz);
+        }
+        if(infinityPointCount == 2) {
+            isIdealLine[0] = true;
+        }
+        else {
+            isIdealLine[0] = false;
         }
 
         auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({points[0], points[1]});
@@ -217,6 +238,7 @@ void display(void) {
         glColor3f(1.0, 1.0, 1.0);
 
         Vector3 points[2];
+        int infinityPointCount = 0;
         for(int j = 3; j < 5; j++) {
             auto [xCoord, yCoord, offsetCircleX, offsetCircleY] = markedPoints[j];
             double dx = (xCoord);
@@ -226,7 +248,16 @@ void display(void) {
             if(std::isnan(dz)) {
                 dz = 0;
             }
+            if(norm <= infinityThreshold) {
+                infinityPointCount++;
+            }
             points[j - 3] = Vector3(dx, dy, dz);
+        }
+        if(infinityPointCount == 2) {
+            isIdealLine[1] = true;
+        }
+        else {
+            isIdealLine[1] = false;
         }
 
         // draw line 2 projected onto second circle
@@ -252,6 +283,42 @@ void display(void) {
         }
     }
 
+    // draw marked points
+    glColor3f(0.5, 0.5, 0.5);
+    for(int j = 0; j < drawablePoints; j++) {
+        auto[px, py, offsetCircleX, offsetCircleY] = markedPoints[j];
+        if(checkInfinityPoint(px, py)) {
+            for(float i = 0; i < 2 * M_PI; i += 0.001) {
+                int pxCircle = (7 * cos(i)) - px + offsetCircleX;
+                int pyCircle = (7 * sin(i)) - py + offsetCircleY;
+            glVertex2i(pxCircle, pyCircle);
+        }
+        }
+        for(float i = 0; i < 2 * M_PI; i += 0.001) {
+            int pxCircle = (7 * cos(i)) + px + offsetCircleX;
+            int pyCircle = (7 * sin(i)) + py + offsetCircleY;
+            glVertex2i(pxCircle, pyCircle);
+        }
+    }
+
+
+    //draw interactive point
+    glColor3f(0.0, 0.5, 0.5); 
+    if (canDrawInteractivePoint) {
+        auto[px, py] = interactivePoint;
+        if(checkInfinityPoint(px, py)) {
+            for(float i = 0; i < 2 * M_PI; i += 0.001) {
+                int pxCircle = (7 * cos(i)) - px + offsetCircle1X;
+                int pyCircle = (7 * sin(i)) - py + offsetCircle1Y;
+            glVertex2i(pxCircle, pyCircle);
+            }
+        }
+        for(float i = 0; i < 2 * M_PI; i += 0.001) {
+            int pxCircle = (7 * cos(i)) + px + offsetCircle1X;
+            int pyCircle = (7 * sin(i)) + py + offsetCircle1Y;
+            glVertex2i(pxCircle, pyCircle);
+        }
+    }
     glEnd();
     glFlush();
 }

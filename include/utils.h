@@ -15,20 +15,20 @@ const int WORLD_TOP = 420;
 extern int collectedPoints;
 extern int drawablePoints;
 extern std::tuple<double, double, int ,int> markedPoints[6];
-extern int offsetCircle1X, offsetCircle1Y;
-extern int offsetCircle2X, offsetCircle2Y;
+extern const int offsetCircle1X, offsetCircle1Y;
+extern const int offsetCircle2X, offsetCircle2Y;
 extern int circleRadius;
 extern int worldX, worldY;
 extern double infinityThreshold;
-extern float c;
+extern bool isIdealLine[2];
 extern Matrix3 lineTransformations[2];
 extern std::tuple<double, bool> lineBaseRotations[2];
-
+extern std::tuple<double, double> interactivePoint;
+extern bool canDrawInteractivePoint;
 void myInit(void);
 void mouseToWorldCoords(int mouseX, int mouseY, int& worldX, int& worldY);
 double calcNorm2d(double distanceX, double distanceY);
 void capDistance2D(double& distanceX, double& distanceY);
-void setMaxDistance2D(double& distanceX, double& distanceY);
 bool checkInfinityPoint(double px, double dy);
 bool checkLinePointsDifferent(const Vector3& point1, const Vector3& point2);
 
