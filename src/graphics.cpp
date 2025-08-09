@@ -199,7 +199,94 @@ void display(void) {
         lineBaseRotations[1] = std::make_tuple(zRotationAngle, clockwise);
 
         drawProjectedLine(lineTransformations[1], offsetCircle2X, offsetCircle2Y, circleRadius);
+
+        drawProjectedLine(lineTransformations[1], offsetCircle1X, offsetCircle1Y, circleRadius);
     }
+
+    if(collectedPoints >= 6){
+        // all points on the sphere
+        Vector3 x1 = liftToSphere(std::get<0>(markedPoints[0]), std::get<1>(markedPoints[0]), circleRadius);
+        Vector3 x2 = liftToSphere(std::get<0>(markedPoints[1]), std::get<1>(markedPoints[1]), circleRadius);
+        Vector3 x3 = liftToSphere(std::get<0>(markedPoints[2]), std::get<1>(markedPoints[2]), circleRadius);
+        Vector3 y1 = liftToSphere(std::get<0>(markedPoints[3]), std::get<1>(markedPoints[3]), circleRadius);
+        Vector3 y2 = liftToSphere(std::get<0>(markedPoints[4]), std::get<1>(markedPoints[4]), circleRadius);
+        Vector3 y3 = liftToSphere(std::get<0>(markedPoints[5]), std::get<1>(markedPoints[5]), circleRadius);
+        
+        // all lines between points (necessary for pappus line)
+        Vector3 x1y2 = x1.cross(y2);
+        Vector3 x2y1 = x2.cross(y1);
+        Vector3 x1y3 = x1.cross(y3);
+        Vector3 x3y1 = x3.cross(y1);
+
+
+        Vector3 intersect1 = lineIntersection(x1y2, x2y1);
+        Vector3 instersect2 = lineIntersection(x1y3, x3y1);
+
+        Vector3 pappus = intersect1.cross(instersect2);
+
+        
+    // // Draw x1y2
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x1, y2});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+
+    // // Draw x2y1
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y1, x2});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+    //     // Draw x3y1
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x3, y1});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+
+    //     // draw y3x1
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y3, x1});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x2, y3});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+    // {
+    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y2, x3});
+    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+    // }
+
+
+
+        //draw pappus
+
+        glColor3f(0.5, 0.2, 1.0);
+        auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({intersect1, instersect2});
+        Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+        std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
+
+        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+    }
+
+
 
     glEnd();
     glFlush();
