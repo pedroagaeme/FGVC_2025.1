@@ -57,3 +57,41 @@ bool checkLinePointsDifferent(const Vector3& point1, const Vector3& point2) {
     double d2 = calcNorm2d(point1.x + point2.x, point1.y + point2.y);
     return (std::min(d1, d2) > infinityThreshold);
 }
+
+// Helper: Lift a 2D point on the circle to 3D (on the sphere)
+Vector3 liftToSphere(double x, double y, double radius) {
+    double norm = pow(radius, 2) - pow(x, 2) - pow(y, 2);
+    double z = sqrt(norm);
+    if(std::isnan(z)) z = 0;
+    return Vector3(x, y, z);
+}
+
+// Helper: Get the two 3D points for a line from markedPoints
+void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius) {
+    auto [x1, y1, _, __] = markedPoints[startIdx];
+    auto [x2, y2, ___, ____] = markedPoints[startIdx + 1];
+    p1 = liftToSphere(x1, y1, radius);
+    p2 = liftToSphere(x2, y2, radius);
+}
+
+// Helper: Draw a projected line on a circle
+void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius) {
+    Vector3 localCoordPoint, globalCoordPoint;
+    float vx, vy, x, y;
+    for(float i = 0; i < M_PI; i += 0.001) {
+        localCoordPoint = Vector3(cos(i), sin(i), 0);
+        globalCoordPoint = transformation * localCoordPoint;
+
+        vx = (radius * globalCoordPoint[0]);
+        vy = (radius * globalCoordPoint[1]);
+        x = vx + offsetX;
+        y = vy + offsetY;
+        glVertex2i(x, y);
+
+        if(checkInfinityPoint(vx, vy)) {
+            x = -vx + offsetX;
+            y = -vy + offsetY;
+            glVertex2i(x, y);
+        }
+    }
+}
