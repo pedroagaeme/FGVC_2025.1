@@ -86,7 +86,7 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         if(checkInfinityPoint(vx, vy)) {
             x = -vx + offsetX;
             y = -vy + offsetY;
-            glVertex2i(x, y);
+            glVertex2f(x, y);
         }
     }
 }

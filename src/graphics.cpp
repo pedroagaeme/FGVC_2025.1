@@ -173,7 +173,7 @@ void display(void) {
     for(float i = 0; i < 2 * M_PI; i += 0.001) {
         x = (circleRadius * cos(i)) + offsetCircle1X;
         y = (circleRadius * sin(i)) + offsetCircle1Y;
-        glVertex2i(x, y);
+        glVertex2f(x, y);
     }
 
     // draw line 1 projected onto first circle
@@ -199,7 +199,7 @@ void display(void) {
     for(float i = 0; i < 2 * M_PI; i += 0.001) {
         x = (circleRadius * cos(i)) + offsetCircle2X;
         y = (circleRadius * sin(i)) + offsetCircle2Y;
-        glVertex2i(x, y);
+        glVertex2f(x, y);
     }
 
     // draw line 2 projected onto second circle
@@ -222,21 +222,25 @@ void display(void) {
         //drawProjectedLine(lineTransformations[1], offsetCircle1X, offsetCircle1Y, circleRadius);
     }
 
+    int pointOrder;
     // draw marked points
-    glColor3f(0.5, 0.5, 0.5);
     for(int j = 0; j < drawablePoints; j++) {
+        float rgbValues[3] = {0.7, 0.7, 0.7};
+        rgbValues[j % 3] = 0;
+        auto [redValue, greenValue, blueValue] = rgbValues;
+        glColor3f(redValue, greenValue, blueValue);
         auto[px, py, offsetCircleX, offsetCircleY] = markedPoints[j];
         if(checkInfinityPoint(px, py)) {
             for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                int pxCircle = (7 * cos(i)) - px + offsetCircleX;
-                int pyCircle = (7 * sin(i)) - py + offsetCircleY;
-            glVertex2i(pxCircle, pyCircle);
+                float pxCircle = (7 * cos(i)) - px + offsetCircleX;
+                float pyCircle = (7 * sin(i)) - py + offsetCircleY;
+            glVertex2f(pxCircle, pyCircle);
         }
         }
         for(float i = 0; i < 2 * M_PI; i += 0.001) {
-            int pxCircle = (7 * cos(i)) + px + offsetCircleX;
-            int pyCircle = (7 * sin(i)) + py + offsetCircleY;
-            glVertex2i(pxCircle, pyCircle);
+            float pxCircle = (7 * cos(i)) + px + offsetCircleX;
+            float pyCircle = (7 * sin(i)) + py + offsetCircleY;
+            glVertex2f(pxCircle, pyCircle);
         }
     }
 
@@ -314,55 +318,94 @@ void display(void) {
 
         //draw pappus
 
-        glColor3f(0.5, 0.2, 1.0);
+        glColor3f(0.1, 0.1, 0.1);
         auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({intersect1, instersect2});
         Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
 
-        //drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-        //drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
 
         //draw interactive point
-        glColor3f(0.0, 0.5, 0.5); 
+        glColor3f(1.0, 0.5, 0.0);
         if (canDrawInteractivePoint) {
             auto[px, py] = interactivePoint;
             if(checkInfinityPoint(px, py)) {
                 for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                    int pxCircle = (7 * cos(i)) - px + offsetCircle1X;
-                    int pyCircle = (7 * sin(i)) - py + offsetCircle1Y;
-                glVertex2i(pxCircle, pyCircle);
+                    float pxCircle = (7 * cos(i)) - px + offsetCircle1X;
+                    float pyCircle = (7 * sin(i)) - py + offsetCircle1Y;
+                glVertex2f(pxCircle, pyCircle);
                 }
             }
             for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                int pxCircle = (7 * cos(i)) + px + offsetCircle1X;
-                int pyCircle = (7 * sin(i)) + py + offsetCircle1Y;
-                glVertex2i(pxCircle, pyCircle);
+                float pxCircle = (7 * cos(i)) + px + offsetCircle1X;
+                float  pyCircle = (7 * sin(i)) + py + offsetCircle1Y;
+                glVertex2f(pxCircle, pyCircle);
             }
 
             // draw the image point
             Vector3 imageLine = y2.cross(y3);
             Vector3 itp = liftToSphere(px, py, circleRadius);
-            Vector3 firstCorrrespondeLine = y1.cross(itp);
-            Vector3 pappusIntersection = lineIntersection(pappus, firstCorrrespondeLine);
-            Vector3 secondCorrrespondeLine = x1.cross(pappusIntersection);
-            Vector3 imagePoint = lineIntersection(imageLine, secondCorrrespondeLine);
+            Vector3 firstCorrrespondenceLine = y1.cross(itp);
+
+            Vector3 pappusIntersection = lineIntersection(pappus, firstCorrrespondenceLine);
+            Vector3 secondCorrrespondenceLine = x1.cross(pappusIntersection);
+
+            Vector3 imagePoint = lineIntersection(imageLine, secondCorrrespondenceLine);
+
             if(imagePoint[2] < 0) {
                 imagePoint = imagePoint * -1;
             }
 
-            glColor3f(0.5, 0.2, 1.0);
-            auto [qx, qy, qz] = imagePoint;
-            if(checkInfinityPoint(qx, qy)) {
+
+            if (pappusIntersection[2] < 0) {
+                pappusIntersection = pappusIntersection * -1;
+            }
+            
+            glColor3f(0.1, 0.1, 0.1);
+            auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y1, itp});
+            Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+
+            drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+
+            auto [zRotationAngle2, clockwise2, xRotationAngle2] = calculateRotations({pappusIntersection, imagePoint});
+            transform = Matrix3::rotationZCos(zRotationAngle2, clockwise2) * Matrix3::rotationXSin(xRotationAngle2);
+
+            drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+
+            auto [rx, ry, rz] = pappusIntersection;
+            if(checkInfinityPoint(rx, ry)) {
                 for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                    int pxCircle = (7 * cos(i)) - qx + offsetCircle2X;
-                    int pyCircle = (7 * sin(i)) - qy + offsetCircle2Y;
-                glVertex2i(pxCircle, pyCircle);
+                    float pxCircle1 = (7 * cos(i)) - rx + offsetCircle1X;
+                    float pyCircle1 = (7 * sin(i)) - ry + offsetCircle1Y;
+                    float pxCircle2 = (7 * cos(i)) - rx + offsetCircle2X;
+                    float pyCircle2 = (7 * sin(i)) - ry + offsetCircle2Y;
+                    glVertex2f(pxCircle1, pyCircle1);
+                    glVertex2f(pxCircle2, pyCircle2);
                 }
             }
             for(float i = 0; i < 2 * M_PI; i += 0.001) {
-                int pxCircle = (7 * cos(i)) + qx + offsetCircle2X;
-                int pyCircle = (7 * sin(i)) + qy + offsetCircle2Y;
-                glVertex2i(pxCircle, pyCircle); 
+                float  pxCircle1 = (7 * cos(i)) + rx + offsetCircle1X;
+                float pyCircle1 = (7 * sin(i)) + ry + offsetCircle1Y;
+                float pxCircle2 = (7 * cos(i)) + rx + offsetCircle2X;
+                float pyCircle2 = (7 * sin(i)) + ry + offsetCircle2Y;
+                glVertex2f(pxCircle1, pyCircle1);
+                glVertex2f(pxCircle2, pyCircle2);
+            }
+
+            glColor3f(1.0, 0.5, 0.0);
+            auto [qx, qy, qz] = imagePoint;
+            if(checkInfinityPoint(qx, qy)) {
+                for(float i = 0; i < 2 * M_PI; i += 0.001) {
+                    float pxCircle = (7 * cos(i)) - qx + offsetCircle2X;
+                    float pyCircle = (7 * sin(i)) - qy + offsetCircle2Y;
+                glVertex2f(pxCircle, pyCircle);
+                }
+            }
+            for(float i = 0; i < 2 * M_PI; i += 0.001) {
+                float pxCircle = (7 * cos(i)) + qx + offsetCircle2X;
+                float pyCircle = (7 * sin(i)) + qy + offsetCircle2Y;
+                glVertex2f(pxCircle, pyCircle); 
             }
         }
     }
