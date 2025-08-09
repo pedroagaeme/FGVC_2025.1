@@ -34,5 +34,5 @@ bool checkLinePointsDifferent(const Vector3& point1, const Vector3& point2);
 Vector3 liftToSphere(double x, double y, double radius);
 void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius);
 void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius);
-
+Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2);
 #endif

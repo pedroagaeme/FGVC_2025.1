@@ -95,3 +95,8 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         }
     }
 }
+
+Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2){
+    Vector3 cross = line1.cross(line2);
+    return cross.normalize()*circleRadius;
+}
