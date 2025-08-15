@@ -9,7 +9,8 @@ Para Linux (Ubuntu/Debian recomendado):
 
 ```bash
 sudo apt update
-sudo apt install freeglut3-dev 
+sudo apt install freeglut3-dev
+sudo apt install libglew-dev
 ```
 
 ## Compilação

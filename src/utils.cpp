@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "graphics.h"
 #include <cmath>
 
 int collectedPoints = 0;
@@ -70,9 +71,14 @@ void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius) {
 }
 
 // Helper: Draw a projected line on a circle
-void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius) {
+void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite) {
     Vector3 localCoordPoint, globalCoordPoint;
     float vx, vy, x, y;
+    std::vector<float> projBuf;
+    std::vector<float> projOppBuf;
+    // subdued gray for supporting lines
+    const float supportGray = 0.2f;
+    // draw only the arc from 0..PI (half circle) to avoid drawing the diameter
     for(float i = 0; i < M_PI; i += 0.001) {
         localCoordPoint = Vector3(cos(i), sin(i), 0);
         globalCoordPoint = transformation * localCoordPoint;
@@ -81,14 +87,24 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         vy = (radius * globalCoordPoint[1]);
         x = vx + offsetX;
         y = vy + offsetY;
-        glVertex2i(x, y);
+        projBuf.push_back(x);
+        projBuf.push_back(y);
+        projBuf.push_back(supportGray);
+        projBuf.push_back(supportGray);
+        projBuf.push_back(supportGray);
 
-        if(checkInfinityPoint(vx, vy)) {
+        if(drawOpposite && checkInfinityPoint(vx, vy)) {
             x = -vx + offsetX;
             y = -vy + offsetY;
-            glVertex2f(x, y);
+            projOppBuf.push_back(x);
+            projOppBuf.push_back(y);
+            projOppBuf.push_back(supportGray);
+            projOppBuf.push_back(supportGray);
+            projOppBuf.push_back(supportGray);
         }
     }
+    drawVertices(projBuf, GL_LINE_STRIP);
+    if(drawOpposite && !projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
 }
 
 Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2){
