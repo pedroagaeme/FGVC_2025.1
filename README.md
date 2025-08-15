@@ -18,7 +18,7 @@ sudo apt install libglew-dev
 No diretório do projeto, execute:
 
 ```bash
-g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut
+g++ src/*.cpp -Iinclude -o app -lGLEW -lGL -lGLU -lglut
 ```
 
 ## Execução
