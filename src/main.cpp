@@ -8,9 +8,9 @@ int main(int argc,char** argv) {
     // Note: removed glutInitContextVersion/glutInitContextProfile for compatibility
 
     glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
-    glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGHT);
+    glutInitWindowSize(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
     glutInitWindowPosition(0,0);
-    glutCreateWindow("Circle Drawing");
+    glutCreateWindow("Pappus Construction - Press F for fullscreen, Q to quit");
 
     // Initialize GLEW after creating an OpenGL context
     glewExperimental = GL_TRUE;
@@ -25,6 +25,8 @@ int main(int argc,char** argv) {
     glutMouseFunc(mouseClickCallback);
     glutPassiveMotionFunc(passiveMouseMotion);
     glutDisplayFunc(display);
+    glutReshapeFunc(reshapeCallback);
+    glutKeyboardFunc(keyboardCallback);
     glutMainLoop();
 }
 

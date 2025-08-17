@@ -18,6 +18,12 @@ std::tuple<double, bool> lineBaseRotations[2] = {};
 std::tuple<double, double> interactivePoint = {};
 bool canDrawInteractivePoint = false;
 
+// Dynamic window size tracking
+int currentWindowWidth = INITIAL_WINDOW_WIDTH;
+int currentWindowHeight = INITIAL_WINDOW_HEIGHT;
+bool isFullscreen = false;
+bool showSupportingLines = false;
+
 void myInit(void) {
     glClearColor(0.0,0.0,0.0,1.0);
     glPointSize(1.0);
@@ -27,8 +33,28 @@ void myInit(void) {
 }
 
 void mouseToWorldCoords(int mouseX,int mouseY,int& worldX,int& worldY) {
-    worldX = (int)((mouseX * 1560.0f / 1366) - 780);
-    worldY = (int)(420 - (mouseY * 840.0f / 768));
+    // Dynamic coordinate mapping that exactly matches the shader behavior
+    float worldWidth = WORLD_RIGHT - WORLD_LEFT;   // 1560
+    float worldHeight = WORLD_TOP - WORLD_BOTTOM;  // 840
+    float aspectRatio = (float)currentWindowWidth / currentWindowHeight;
+    float worldAspectRatio = worldWidth / worldHeight;
+    
+    // Convert mouse coords to normalized device coordinates (-1 to 1)
+    float ndcX = (2.0f * mouseX / currentWindowWidth) - 1.0f;
+    float ndcY = 1.0f - (2.0f * mouseY / currentWindowHeight);
+    
+    // Apply inverse of the shader's aspect ratio scaling
+    if(aspectRatio > worldAspectRatio) {
+        // Viewport is wider than world, shader scales X down, so we scale X back up
+        ndcX *= (aspectRatio / worldAspectRatio);
+    } else {
+        // Viewport is taller than world, shader scales Y down, so we scale Y back up
+        ndcY *= (worldAspectRatio / aspectRatio);
+    }
+    
+    // Convert from NDC to world coordinates
+    worldX = (int)(ndcX * (WORLD_RIGHT - WORLD_LEFT) * 0.5f);
+    worldY = (int)(ndcY * (WORLD_TOP - WORLD_BOTTOM) * 0.5f);
 }
 
 double calcNorm2d(double distanceX,double distanceY) {
@@ -110,4 +136,66 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
 Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2){
     Vector3 cross = line1.cross(line2);
     return cross.normalize()*circleRadius;
+}
+
+void reshapeCallback(int width, int height) {
+    currentWindowWidth = width;
+    currentWindowHeight = height;
+    
+    // Update viewport
+    glViewport(0, 0, width, height);
+    
+    // Update projection matrix for traditional OpenGL calls (if any)
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(WORLD_LEFT, WORLD_RIGHT, WORLD_BOTTOM, WORLD_TOP);
+    glMatrixMode(GL_MODELVIEW);
+    
+    glutPostRedisplay();
+}
+
+void keyboardCallback(unsigned char key, int x, int y) {
+    static int savedWindowX = 100, savedWindowY = 100;
+    static int savedWindowWidth = INITIAL_WINDOW_WIDTH;
+    static int savedWindowHeight = INITIAL_WINDOW_HEIGHT;
+    
+    switch(key) {
+        case 'f':
+        case 'F':
+            if(!isFullscreen) {
+                // Save current window position and size
+                savedWindowX = glutGet(GLUT_WINDOW_X);
+                savedWindowY = glutGet(GLUT_WINDOW_Y);
+                savedWindowWidth = glutGet(GLUT_WINDOW_WIDTH);
+                savedWindowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+                
+                // Go fullscreen
+                glutFullScreen();
+                isFullscreen = true;
+            } else {
+                // Exit fullscreen
+                glutReshapeWindow(savedWindowWidth, savedWindowHeight);
+                glutPositionWindow(savedWindowX, savedWindowY);
+                isFullscreen = false;
+            }
+            break;
+        case 27: // ESC key
+            if(isFullscreen) {
+                glutReshapeWindow(savedWindowWidth, savedWindowHeight);
+                glutPositionWindow(savedWindowX, savedWindowY);
+                isFullscreen = false;
+            }
+            break;
+        case 'q':
+        case 'Q':
+            exit(0);
+            break;
+        case 's':
+        case 'S':
+            if(collectedPoints >= 6) {
+                showSupportingLines = !showSupportingLines;
+                glutPostRedisplay();
+            }
+            break;
+    }
 }

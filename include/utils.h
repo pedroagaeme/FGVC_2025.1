@@ -6,12 +6,18 @@
 #include <GL/glut.h>
 #include <tuple>
 
-const int WINDOW_WIDTH = 1366;
-const int WINDOW_HEIGHT = 768;
+const int INITIAL_WINDOW_WIDTH = 1366;
+const int INITIAL_WINDOW_HEIGHT = 768;
 const int WORLD_LEFT = -780;
 const int WORLD_RIGHT = 780;
 const int WORLD_BOTTOM = -420;
 const int WORLD_TOP = 420;
+
+// Dynamic window size tracking
+extern int currentWindowWidth;
+extern int currentWindowHeight;
+extern bool isFullscreen;
+extern bool showSupportingLines;
 
 extern int collectedPoints;
 extern int drawablePoints;
@@ -28,6 +34,8 @@ extern std::tuple<double, double> interactivePoint;
 extern bool canDrawInteractivePoint;
 void myInit(void);
 void mouseToWorldCoords(int mouseX, int mouseY, int& worldX, int& worldY);
+void reshapeCallback(int width, int height);
+void keyboardCallback(unsigned char key, int x, int y);
 double calcNorm2d(double distanceX, double distanceY);
 void capDistance2D(double& distanceX, double& distanceY);
 bool checkInfinityPoint(double px, double dy);

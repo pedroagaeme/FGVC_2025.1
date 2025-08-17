@@ -12,10 +12,11 @@
 GLuint shaderProgram = 0;
 static GLuint vao = 0, vbo = 0;
 static size_t vboCapacityBytes = 0; // track current VBO allocation
-// uniform locations for smoothing
+// uniform locations for smoothing and viewport
 static GLint uni_uAlpha = -1;
 static GLint uni_uPointSize = -1;
 static GLint uni_uIsPoint = -1;
+static GLint uni_uViewportSize = -1;
 
 // smoothing for interactive/mouse-driven visuals (render-only, not changing stored data)
 static double drawMarkedX[6] = {0}, drawMarkedY[6] = {0};
@@ -25,7 +26,7 @@ static double targetInteractiveX = 0.0, targetInteractiveY = 0.0;
 static bool smoothingInitialized = false;
 static const float smoothingFactor = 0.25f; // 0..1, larger = faster (less smooth)
 
-// Improved vertex shader: expose point-size and use a viewport uniform for mapping
+// Improved vertex shader: dynamic viewport mapping
 static const char* vertexShaderSrc = R"glsl(
 #version 330 core
 layout(location = 0) in vec2 inPos;
@@ -33,10 +34,27 @@ layout(location = 1) in vec3 inColor;
 out vec3 fragColor;
 uniform float uPointSize;
 uniform int uIsPoint;
+uniform vec2 uViewportSize;
 void main() {
     fragColor = inColor;
-    // map world coords to clip space (world extents are +/-780 and +/-420)
-    gl_Position = vec4(inPos.x / 780.0, inPos.y / 420.0, 0.0, 1.0);
+    // Dynamic coordinate mapping based on viewport aspect ratio
+    float worldWidth = 1560.0;   // WORLD_RIGHT - WORLD_LEFT
+    float worldHeight = 840.0;   // WORLD_TOP - WORLD_BOTTOM
+    float aspectRatio = uViewportSize.x / uViewportSize.y;
+    float worldAspectRatio = worldWidth / worldHeight;
+    
+    vec2 scaledPos = inPos;
+    if(aspectRatio > worldAspectRatio) {
+        // Viewport is wider than world, scale X to maintain aspect ratio
+        scaledPos.x = inPos.x / (780.0 * aspectRatio / worldAspectRatio);
+        scaledPos.y = inPos.y / 420.0;
+    } else {
+        // Viewport is taller than world, scale Y to maintain aspect ratio
+        scaledPos.x = inPos.x / 780.0;
+        scaledPos.y = inPos.y / (420.0 * worldAspectRatio / aspectRatio);
+    }
+    
+    gl_Position = vec4(scaledPos, 0.0, 1.0);
     if(uIsPoint == 1) {
         gl_PointSize = uPointSize;
     }
@@ -102,10 +120,12 @@ void initGLResources() {
     uni_uAlpha = glGetUniformLocation(shaderProgram, "uAlpha");
     uni_uPointSize = glGetUniformLocation(shaderProgram, "uPointSize");
     uni_uIsPoint = glGetUniformLocation(shaderProgram, "uIsPoint");
+    uni_uViewportSize = glGetUniformLocation(shaderProgram, "uViewportSize");
     // set sensible defaults
     if(uni_uAlpha != -1) glUniform1f(uni_uAlpha, 1.0f);
     if(uni_uPointSize != -1) glUniform1f(uni_uPointSize, 6.0f);
     if(uni_uIsPoint != -1) glUniform1i(uni_uIsPoint, 0);
+    if(uni_uViewportSize != -1) glUniform2f(uni_uViewportSize, currentWindowWidth, currentWindowHeight);
     glUseProgram(0);
 
     // create VAO/VBO
@@ -154,6 +174,9 @@ static void drawRawVertices(const std::vector<float>& data, GLenum mode) {
     }
 
     // set smoothing uniforms depending on primitive type
+    if(uni_uViewportSize != -1) {
+        glUniform2f(uni_uViewportSize, currentWindowWidth, currentWindowHeight);
+    }
     if(uni_uIsPoint != -1) {
         if(mode == GL_POINTS) glUniform1i(uni_uIsPoint, 1);
         else glUniform1i(uni_uIsPoint, 0);
@@ -584,71 +607,83 @@ void display(void) {
         Vector3 y2 = liftToSphere(std::get<0>(markedPoints[4]), std::get<1>(markedPoints[4]), circleRadius);
         Vector3 y3 = liftToSphere(std::get<0>(markedPoints[5]), std::get<1>(markedPoints[5]), circleRadius);
         
+        
         // all lines between points (necessary for pappus line)
         Vector3 x1y2 = x1.cross(y2);
         Vector3 x2y1 = x2.cross(y1);
         Vector3 x1y3 = x1.cross(y3);
         Vector3 x3y1 = x3.cross(y1);
+        Vector3 x2y3 = x2.cross(y3);
+        Vector3 y2x3 = y2.cross(x3);
 
 
         Vector3 intersect1 = lineIntersection(x1y2, x2y1);
         Vector3 instersect2 = lineIntersection(x1y3, x3y1);
+        Vector3 intersect3 = lineIntersection(x2y3, y2x3);
+        Vector3 pappus;
+        if (checkLinePointsDifferent(intersect1, instersect2)) {
+            pappus = intersect1.cross(instersect2);
+        } else {
+            pappus = intersect1.cross(intersect3);
+        }
 
-        Vector3 pappus = intersect1.cross(instersect2);
         
-    // // Draw x1y2
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x1, y2});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
+        // Draw supporting lines if enabled (S key toggle)
+        if(showSupportingLines) {
+            // Draw x1y2
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x1, y2});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
 
+            // Draw x2y1
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y1, x2});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
 
-    // // Draw x2y1
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y1, x2});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
+            // Draw x3y1
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x3, y1});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
 
-    //     // Draw x3y1
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x3, y1});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
+            // Draw y3x1
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y3, x1});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
 
+            // Draw x2y3
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x2, y3});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
 
-    //     // draw y3x1
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y3, x1});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
-
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x2, y3});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
-
-    // {
-    //     auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y2, x3});
-    //     Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-    //     std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
-    //     drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-    // }
+            // Draw y2x3
+            {
+                auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y2, x3});
+                Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+            }
+        }
 
     
 
         //draw pappus
 
-        glColor3f(0.1, 0.1, 0.1);
+        glColor3f(0.5, 0.5, 0.5);
         auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({intersect1, instersect2});
         Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
@@ -686,21 +721,28 @@ void display(void) {
             drawVertices(itpBuf, GL_LINE_STRIP);
             if(!itpOppBuf.empty()) drawVertices(itpOppBuf, GL_LINE_STRIP);
 
+            Vector3 chosenpoint1 = y1;
+            Vector3 chosenpoint2 = x1;
+            if (checkInfinityPoint(y1[0], y1[1]) && checkInfinityPoint(x1[0], x1[1])) {
+                chosenpoint1 = y2;
+                chosenpoint2 = x2;
+            }
+        
             // draw the image point and related projected lines
             Vector3 imageLine = y2.cross(y3);
             Vector3 itp = liftToSphere(px, py, circleRadius);
-            Vector3 firstCorrrespondenceLine = y1.cross(itp);
+            Vector3 firstCorrrespondenceLine = chosenpoint1.cross(itp);
 
             Vector3 pappusIntersection = lineIntersection(pappus, firstCorrrespondenceLine);
-            Vector3 secondCorrrespondenceLine = x1.cross(pappusIntersection);
+            Vector3 secondCorrrespondenceLine = chosenpoint2.cross(pappusIntersection);
 
             Vector3 imagePoint = lineIntersection(imageLine, secondCorrrespondenceLine);
             if(imagePoint[2] < 0) imagePoint = imagePoint * -1;
             if(pappusIntersection[2] < 0) pappusIntersection = pappusIntersection * -1;
 
-            // projected line from y1 to itp on circle1
+            // projected line from chosenpoint1 to itp on circle1
             {
-                auto [zR, cw, xR] = calculateRotations({y1, itp});
+                auto [zR, cw, xR] = calculateRotations({chosenpoint1, itp});
                 Matrix3 tr = Matrix3::rotationZCos(zR, cw) * Matrix3::rotationXSin(xR);
                 drawProjectedLine(tr, offsetCircle1X, offsetCircle1Y, circleRadius);
             }
