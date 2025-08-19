@@ -97,13 +97,12 @@ void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius) {
 }
 
 // Helper: Draw a projected line on a circle
-void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite) {
+void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite, Vector3 linecolor) {
     Vector3 localCoordPoint, globalCoordPoint;
     float vx, vy, x, y;
     std::vector<float> projBuf;
     std::vector<float> projOppBuf;
     // subdued gray for supporting lines
-    const float supportGray = 0.2f;
     // draw only the arc from 0..PI (half circle) to avoid drawing the diameter
     for(float i = 0; i < M_PI; i += 0.001) {
         localCoordPoint = Vector3(cos(i), sin(i), 0);
@@ -115,18 +114,18 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         y = vy + offsetY;
         projBuf.push_back(x);
         projBuf.push_back(y);
-        projBuf.push_back(supportGray);
-        projBuf.push_back(supportGray);
-        projBuf.push_back(supportGray);
+        projBuf.push_back(linecolor[0]);
+        projBuf.push_back(linecolor[1]);
+        projBuf.push_back(linecolor[2]);
 
         if(drawOpposite && checkInfinityPoint(vx, vy)) {
             x = -vx + offsetX;
             y = -vy + offsetY;
             projOppBuf.push_back(x);
             projOppBuf.push_back(y);
-            projOppBuf.push_back(supportGray);
-            projOppBuf.push_back(supportGray);
-            projOppBuf.push_back(supportGray);
+            projOppBuf.push_back(linecolor[0]);
+            projOppBuf.push_back(linecolor[1]);
+            projOppBuf.push_back(linecolor[2]);
         }
     }
     drawVertices(projBuf, GL_LINE_STRIP);

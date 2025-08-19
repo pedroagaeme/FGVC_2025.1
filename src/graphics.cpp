@@ -454,9 +454,9 @@ void display(void) {
         y = (circleRadius * sin(i)) + offsetCircle1Y;
         buffer.push_back(x);
         buffer.push_back(y);
-        buffer.push_back(0.2f);
-        buffer.push_back(0.2f);
-        buffer.push_back(0.2f);
+        buffer.push_back(0.4f);
+        buffer.push_back(0.4f);
+        buffer.push_back(0.4f);
     }
     drawVertices(buffer, GL_LINE_STRIP);
     buffer.clear();
@@ -511,9 +511,9 @@ void display(void) {
         y = (circleRadius * sin(i)) + offsetCircle2Y;
         buffer.push_back(x);
         buffer.push_back(y);
-        buffer.push_back(0.2f);
-        buffer.push_back(0.2f);
-        buffer.push_back(0.2f);
+        buffer.push_back(0.4f);
+        buffer.push_back(0.4f);
+        buffer.push_back(0.4f);
     }
     drawVertices(buffer, GL_LINE_STRIP);
     buffer.clear();
@@ -683,14 +683,14 @@ void display(void) {
 
         //draw pappus
 
-        glColor3f(0.5, 0.5, 0.5);
+        
         auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({intersect1, instersect2});
         Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
 
         // draw only the arc (no opposite-side vertices) for pappus support lines
-        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, false);
-        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, false);
+        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, false, Vector3(0.5,1,0.5));
+        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, false, Vector3(0.5,1,0.5));
 
         //draw interactive point
          if (canDrawInteractivePoint) {

@@ -43,6 +43,6 @@ bool checkLinePointsDifferent(const Vector3& point1, const Vector3& point2);
 Vector3 liftToSphere(double x, double y, double radius);
 void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius);
 // drawOpposite default true to preserve previous behavior; set false to avoid drawing opposite-side vertices
-void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite = true);
+void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite = true, Vector3 linecolor = Vector3(0.2,0.2,0.2));
 Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2);
 #endif
