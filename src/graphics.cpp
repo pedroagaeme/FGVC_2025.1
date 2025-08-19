@@ -474,35 +474,9 @@ void display(void) {
         lineTransformations[0] = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         lineBaseRotations[0] = std::make_tuple(zRotationAngle, clockwise);
 
-        // Generate main projected arc and opposite-side points (white) for the first circle
-        std::vector<float> projBuf;
-        std::vector<float> projOppBuf; // opposite-side vertices (draw separately, white)
-        for(float i = 0; i < M_PI; i += 0.001) {
-            localCoordPoint = Vector3(cos(i), sin(i), 0);
-            globalCoordPoint = lineTransformations[0] * localCoordPoint;
+        drawProjectedLine(lineTransformations[0], offsetCircle1X, offsetCircle1Y, circleRadius, true, Vector3(1,1,1));
 
-            vx = (circleRadius * globalCoordPoint[0]);
-            vy = (circleRadius * globalCoordPoint[1]);
-            x = vx + offsetCircle1X;
-            y = vy + offsetCircle1Y;
-            projBuf.push_back(x);
-            projBuf.push_back(y);
-            projBuf.push_back(1.0f);
-            projBuf.push_back(1.0f);
-            projBuf.push_back(1.0f);
 
-            if(checkInfinityPoint(vx, vy)) {
-                x = -vx + offsetCircle1X;
-                y = -vy + offsetCircle1Y;
-                projOppBuf.push_back(x);
-                projOppBuf.push_back(y);
-                projOppBuf.push_back(1.0f);
-                projOppBuf.push_back(1.0f);
-                projOppBuf.push_back(1.0f);
-            }
-        }
-        drawVertices(projBuf, GL_LINE_STRIP);
-        if(!projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
     }
 
     // draw second circle
@@ -531,35 +505,7 @@ void display(void) {
         lineTransformations[1] = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         lineBaseRotations[1] = std::make_tuple(zRotationAngle, clockwise);
 
-        std::vector<float> projBuf;
-        std::vector<float> projOppBuf; // opposite-side vertices (draw separately)
-        for(float i = 0; i < M_PI; i += 0.001) {
-            localCoordPoint = Vector3(cos(i), sin(i), 0);
-            globalCoordPoint = lineTransformations[1] * localCoordPoint;
-
-            vx = (circleRadius * globalCoordPoint[0]);
-            vy = (circleRadius * globalCoordPoint[1]);
-            x = vx + offsetCircle2X;
-            y = vy + offsetCircle2Y;
-            projBuf.push_back(x);
-            projBuf.push_back(y);
-            projBuf.push_back(1.0f);
-            projBuf.push_back(1.0f);
-            projBuf.push_back(1.0f);
-
-            if(checkInfinityPoint(vx, vy)) {
-                x = -vx + offsetCircle2X;
-                y = -vy + offsetCircle2Y;
-                projOppBuf.push_back(x);
-                projOppBuf.push_back(y);
-                projOppBuf.push_back(1.0f);
-                projOppBuf.push_back(1.0f);
-                projOppBuf.push_back(1.0f);
-            }
-        }
-        drawVertices(projBuf, GL_LINE_STRIP);
-        // draw opposite-side isolated points so they are not connected to the strip
-        if(!projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
+       drawProjectedLine(lineTransformations[1], offsetCircle2X, offsetCircle2Y, circleRadius, true, Vector3(1,1,1));
     }
 
     int pointOrder;
@@ -618,12 +564,16 @@ void display(void) {
 
 
         Vector3 intersect1 = lineIntersection(x1y2, x2y1);
-        Vector3 instersect2 = lineIntersection(x1y3, x3y1);
+        Vector3 intersect2 = lineIntersection(x1y3, x3y1);
         Vector3 intersect3 = lineIntersection(x2y3, y2x3);
         Vector3 pappus;
-        if (checkLinePointsDifferent(intersect1, instersect2)) {
-            pappus = intersect1.cross(instersect2);
+
+        Vector3 chosen1 = intersect1;
+        Vector3 chosen2 = intersect2;
+        if (checkLinePointsDifferent(intersect1, intersect2)) {
+            pappus = intersect1.cross(intersect2);
         } else {
+            chosen2 = intersect3;
             pappus = intersect1.cross(intersect3);
         }
 
@@ -683,14 +633,14 @@ void display(void) {
 
         //draw pappus
 
-        
-        auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({intersect1, instersect2});
+
+        auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({chosen1, chosen2});
         Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         std::tuple<double, bool> rotate = std::make_tuple(zRotationAngle, clockwise);
 
         // draw only the arc (no opposite-side vertices) for pappus support lines
-        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, false, Vector3(0.5,1,0.5));
-        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, false, Vector3(0.5,1,0.5));
+        drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, true, Vector3(0.5,1,0.5));
+        drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, true, Vector3(0.5,1,0.5));
 
         //draw interactive point
          if (canDrawInteractivePoint) {
