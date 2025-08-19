@@ -131,7 +131,7 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
     drawVertices(projBuf, GL_LINE_STRIP);
     projBuf.clear();
 
-    if(sinXval <= 0.001 && !projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
+    if(sinXval <= 0.001 && !projOppBuf.empty()) drawVertices(projOppBuf, GL_LINE_STRIP);
     projOppBuf.clear();
 
 }
