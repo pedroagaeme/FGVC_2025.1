@@ -474,7 +474,7 @@ void display(void) {
         lineTransformations[0] = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         lineBaseRotations[0] = std::make_tuple(zRotationAngle, clockwise);
 
-        drawProjectedLine(lineTransformations[0], offsetCircle1X, offsetCircle1Y, circleRadius, true, Vector3(1,1,1));
+        drawProjectedLine(lineTransformations[0], offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle, Vector3(1,1,1));
 
 
     }
@@ -505,7 +505,7 @@ void display(void) {
         lineTransformations[1] = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
         lineBaseRotations[1] = std::make_tuple(zRotationAngle, clockwise);
 
-       drawProjectedLine(lineTransformations[1], offsetCircle2X, offsetCircle2Y, circleRadius, true, Vector3(1,1,1));
+       drawProjectedLine(lineTransformations[1], offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle, Vector3(1,1,1));
     }
 
     int pointOrder;
@@ -584,48 +584,48 @@ void display(void) {
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x1, y2});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
 
             // Draw x2y1
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y1, x2});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
 
             // Draw x3y1
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x3, y1});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
 
             // Draw y3x1
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y3, x1});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
 
             // Draw x2y3
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({x2, y3});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
 
             // Draw y2x3
             {
                 auto [zRotationAngle, clockwise, xRotationAngle] = calculateRotations({y2, x3});
                 Matrix3 transform = Matrix3::rotationZCos(zRotationAngle, clockwise) * Matrix3::rotationXSin(xRotationAngle);
-                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius);
-                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(transform, offsetCircle1X, offsetCircle1Y, circleRadius, xRotationAngle);
+                drawProjectedLine(transform, offsetCircle2X, offsetCircle2Y, circleRadius, xRotationAngle);
             }
         }
 
@@ -694,14 +694,14 @@ void display(void) {
             {
                 auto [zR, cw, xR] = calculateRotations({chosenpoint1, itp});
                 Matrix3 tr = Matrix3::rotationZCos(zR, cw) * Matrix3::rotationXSin(xR);
-                drawProjectedLine(tr, offsetCircle1X, offsetCircle1Y, circleRadius);
+                drawProjectedLine(tr, offsetCircle1X, offsetCircle1Y, circleRadius, xR, Vector3(0.5,0.5,1));
             }
 
             // projected line for pappusIntersection -> imagePoint on circle2
             {
                 auto [zR2, cw2, xR2] = calculateRotations({pappusIntersection, imagePoint});
                 Matrix3 tr2 = Matrix3::rotationZCos(zR2, cw2) * Matrix3::rotationXSin(xR2);
-                drawProjectedLine(tr2, offsetCircle2X, offsetCircle2Y, circleRadius);
+                drawProjectedLine(tr2, offsetCircle2X, offsetCircle2Y, circleRadius, xR2, Vector3(0.5,0.5,1));
             }
 
             // draw pappus intersection marker circles on both circles (dark gray)

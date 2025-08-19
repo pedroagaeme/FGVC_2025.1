@@ -97,7 +97,7 @@ void getLinePoints(int startIdx, Vector3& p1, Vector3& p2, double radius) {
 }
 
 // Helper: Draw a projected line on a circle
-void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, bool drawOpposite, Vector3 linecolor) {
+void drawProjectedLine(const Matrix3& transformation, float offsetX, float offsetY, float radius, double sinXval, Vector3 linecolor) {
     Vector3 localCoordPoint, globalCoordPoint;
     float vx, vy, x, y;
     std::vector<float> projBuf;
@@ -118,7 +118,7 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         projBuf.push_back(linecolor[1]);
         projBuf.push_back(linecolor[2]);
 
-        if(drawOpposite && checkInfinityPoint(vx, vy)) {
+        if(sinXval <= 0.001) {
             x = -vx + offsetX;
             y = -vy + offsetY;
             projOppBuf.push_back(x);
@@ -129,7 +129,11 @@ void drawProjectedLine(const Matrix3& transformation, float offsetX, float offse
         }
     }
     drawVertices(projBuf, GL_LINE_STRIP);
-    if(drawOpposite && !projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
+    projBuf.clear();
+
+    if(sinXval <= 0.001 && !projOppBuf.empty()) drawVertices(projOppBuf, GL_POINTS);
+    projOppBuf.clear();
+
 }
 
 Vector3 lineIntersection(const Vector3 &line1, const Vector3 &line2){
