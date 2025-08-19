@@ -9,7 +9,8 @@ Para Linux (Ubuntu/Debian recomendado):
 
 ```bash
 sudo apt update
-sudo apt install freeglut3-dev 
+sudo apt install freeglut3-dev
+sudo apt install libglew-dev
 ```
 
 ## Compilação
@@ -17,7 +18,7 @@ sudo apt install freeglut3-dev
 No diretório do projeto, execute:
 
 ```bash
-g++ src/*.cpp -Iinclude -o app -lGL -lGLU -lglut
+g++ src/*.cpp -Iinclude -o app -lGLEW -lGL -lGLU -lglut
 ```
 
 ## Execução
@@ -32,6 +33,11 @@ Uma janela abrirá para visualização e interação com a construção geométr
 
 ## Controles
 
-- Clique esquerdo: marca pontos no círculo principal.  
-- Movimento do mouse: move o ponto atual antes da confirmação.  
+- **Clique esquerdo**: marca pontos no círculo principal.  
+- **Movimento do mouse**: move o ponto atual antes da confirmação.  
+- **Tecla F**: alterna entre modo janela e tela cheia.
+- **Tecla S**: alterna exibição das linhas de suporte (x1y2, x2y1, etc.) quando todos os 6 pontos estão marcados.
+- **Tecla ESC**: sai do modo tela cheia.
+- **Tecla Q**: encerra o programa.
 - A visualização inclui linhas projetadas ilustrando o teorema de Pappus.
+- Marcadores cinza sutis indicam intersecções e pontos de correspondência chave.

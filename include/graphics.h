@@ -6,8 +6,18 @@
 #include "Matrix3.h"
 #include "utils.h"
 
+#include <GL/glew.h>
+#include <vector>
+
 // Inicialização do OpenGL
 void myInit(void);
+
+// initialize shaders/VAO/VBO
+extern GLuint shaderProgram;
+void initGLResources();
+
+// helper to draw interleaved vertex (x,y,r,g,b) data with a given primitive
+void drawVertices(const std::vector<float>& data, GLenum mode);
 
 // Callbacks do mouse
 void mouseClickCallback(int button, int state, int mouseX, int mouseY);
